@@ -1,134 +1,63 @@
-// header
-class THeader extends HTMLElement {
+// Author header
+class AuthorDiv extends HTMLElement{
   connectedCallback() {
-    this.innerHTML = `
-      <header>
-        <img class="logo" src="img/almost logo.png" />
-        <img src="img/ham-open.svg" class="ham" />
-        <nav>
-          <a href="#">Services</a>
-          <a href="#">Our Work</a>
-          <a href="#">Pricing</a>
-          <a href="#">About</a>
-          <a class="btn" href="#">Hire us</a>
-        </nav>
-      </header>
-    `;
-  }
-}
-customElements.define("t-header", THeader);
-
-// section
-class TSection extends HTMLElement {
-  connectedCallback() {
-    const heading = this.getAttribute("heading");
-    const details = this.getAttribute("details");
-
-    this.innerHTML = `
-      <section class="flex margin6">
-        <div>
-          <h2>${heading}</h2>
-          <p>${details}</p>
-        </div>
-      </section>
-    `;
-  }
-}
-customElements.define("t-section", TSection);
-
-class TCard extends HTMLElement {
-  connectedCallback() {
-    const link = this.getAttribute("link");
     const img = this.getAttribute("img");
+    const header = this.getAttribute("header").replace("\n", "<br>");
+    const content = this.getAttribute("content"); 
 
     this.innerHTML = `
-      <section class="flex margin6">
-        <div>
-          <a class="btn" href="${link}"></a>
-        </div>
-        <img src="${img}"/>
-      </section>
-    `;
-  }
-}
-customElements.define("t-card", TCard);
-
-// main section
-class TMainSection extends HTMLElement {
-  connectedCallback() {
-    const heading = this.getAttribute("heading");
-    const details = this.getAttribute("details");
-
-    this.innerHTML = `
-      <div class="main-section">
-        <h2>${heading}</h2>
-        <p>${details}</p>
+    <div class="container padding">
+      <div class="image-card">
+        <img src="../img/${img}" alt="Author image">
       </div>
-    `;
-  }
-}
-customElements.define("t-main-section", TMainSection);
-
-// CTA
-class TCTA extends HTMLElement {
-  connectedCallback() {
-    const heading = this.getAttribute("heading");
-    const details = this.getAttribute("details");
-    const linkText = this.getAttribute("linkText");
-    const link = this.getAttribute("link");
-
-    this.innerHTML = `
-      <section class="center padding6">
-        <h2>${heading}</h2>
-        <p>${details}</p>
-        <a href="${link}" class="btn">${linkText}</a>
-      </section>
-    `;
-  }
-}
-customElements.define("t-cta", TCTA);
-
-// footer
-class TFooter extends HTMLElement {
-  connectedCallback() {
-    this.innerHTML = `
-      <footer>
-        <div class="footer">
-          <div class="footer-left">
-            <img class="logo" src="img/almost logo.png" />
-            <p>
-              We build websites that load in under a minute. <br />
-              Sometimes even faster.
-            </p>
-          </div>
-          <div class="footer-right">
-            <div class="social-media-icons">
-              <img src="img/icons8-github.svg" class="social-media" />
-              <img src="img/icons8-linkedin.svg" class="social-media" />
-              <img src="img/icons8-x.svg" class="social-media" />
-              <img src="img/icons8-youtube.svg" class="social-media" />
-            </div>
-            <p>
-              3 Way, 69th Street, Somewhere, USB <br />
-              123-456-7890 <br />
-              bye@almost.dev
-            </p>
-          </div>
+      <div class="intro">
+        <h1 class="underline">${header}</h1>
+        <p>${content}</p>
+      </div>
+      <!-- Tabs Container -->
+      <div class="tabs-container">
+        <!-- Topic Selector -->
+        <div class="tab">
+          <label for="topic">Topic:</label>
+          <select id="topic">
+            <option value="">--Select Topic--</option>
+            <option value="robotics">Robotics</option>
+            <option value="drawing">Drawing</option>
+          </select>
         </div>
-      </footer>
+
+        <!-- Sub-topic Selector -->
+        <div class="tab">
+          <label for="subtopic">Sub-topic:</label>
+          <select id="subtopic">
+            <option value="">--Select Sub-topic--</option>
+          </select>
+        </div>
+      <div>
+    </div>
     `;
   }
 }
-customElements.define("t-footer", TFooter);
+customElements.define("author-div", AuthorDiv);
 
-// hamburger
-const ham = document.querySelector(".ham");
-const nav = document.querySelector("nav");
-ham.addEventListener("click", toggle);
-nav.addEventListener("click", toggle);
-function toggle() {
-  ham.src = ham.src.includes("img/ham-close.svg")
-    ? "img/ham-open.svg"
-    : "img/ham-close.svg";
-  nav.classList.toggle("show");
-}
+/* TEMPORARY (ChatGPT vibe coding danger danger)*/
+const topicSelect = document.getElementById('topic');
+  const subtopicSelect = document.getElementById('subtopic');
+
+  const subtopics = {
+    robotics: ["Basics of Robotics", "Robot Kinematics", "Control Systems"],
+    drawing: ["Shading 101", "Perspective Drawing", "Color Theory"]
+  };
+
+  topicSelect.addEventListener('change', () => {
+    const topic = topicSelect.value;
+    subtopicSelect.innerHTML = '<option value="">--Select Sub-topic--</option>'; // reset
+    if (topic && subtopics[topic]) {
+      subtopics[topic].forEach(st => {
+        const opt = document.createElement('option');
+        opt.value = st.toLowerCase().replace(/\s+/g, '-');
+        opt.textContent = st;
+        subtopicSelect.appendChild(opt);
+      });
+    }
+  });

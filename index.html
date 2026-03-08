@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 
+<!--Website structure-->
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>v2-Web Components</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Fira+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Noto+Sans+JP:wght@100..900&display=swap"
-    rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The common blog</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
+<!---Website Contents-->
 <body>
-  <t-header></t-header>
-  <t-section heading="The common blog" 
-  details="A shared space for authors to share thoughts and ideas.\n
-    To navigate to an authors page, press their card."></t-section>
-  <t-card link="#" 
-  img="img/seo.svg"></t-card>
-  <t-cta heading="We are almost perfect"
-    details="What are you waiting for? Hire us already. Please, we got bills to pay." linkText="Take the risk"
-    link="#"></t-cta>
+<div class="container">
+  <div class="intro">
+    <h1 class="underline">The common blog</h1>
+    <p>A shared space for authors to share thoughts and ideas.<br>
+    To navigate to an authors page, press their card.</p>
+  </div>
 
-  <t-footer></t-footer>
+  <a href="authors/edvin.html" class="image-card grow">
+    <img src="img/meerkats.jpg" alt="edvin's page">
+  </a>
 
-  <script src="script.js"></script>
+  <a href="tree.jpg" class="image-card grow">
+    <img src="img/tree.jpg" alt="Tree">
+  </a>
+
+</div>
+
 </body>
-
 </html>
