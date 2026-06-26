@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New post</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+      .form-field {
+        display: block;
+        margin-bottom: 14px;
+      }
+      .form-field label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+      .form-field input[type="text"],
+      .form-field input[type="email"],
+      .form-field input[type="password"],
+      .form-field input[type="date"],
+      .form-field select,
+      .form-field textarea {
+        width: 100%;
+        padding: 6px;
+        font-size: 16px;
+        border-radius: 6px;
+        border: 1px solid #999;
+      }
+      .form-field textarea {
+        resize: vertical;
+      }
+      button {
+        padding: 8px 16px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+      .status {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2 class="underline">New post</h2>
+
+      <div id="login-section" style="display: none">
+        <p>You must log in to create a post.</p>
+        <p><a href="reset-password.html">Forgot password?</a></p>
+        <form id="login-form">
+          <div class="form-field">
+            <label for="login-email">Email</label>
+            <input id="login-email" type="email" name="email" required />
+          </div>
+          <div class="form-field">
+            <label for="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              name="password"
+              required
+            />
+          </div>
+          <button type="submit">Log in</button>
+          <p id="login-error" class="status" style="color: red"></p>
+        </form>
+      </div>
+
+      <div id="post-section" style="display: none">
+        <p>
+          Logged in as <strong><span id="user-email"></span></strong>
+          &nbsp;
+          <button id="logout-btn" type="button">Log out</button>
+        </p>
+
+        <form id="post-form">
+          <div class="form-field">
+            <label for="post-title">Title</label>
+            <input id="post-title" type="text" name="title" required />
+          </div>
+          <div class="form-field">
+            <label for="post-topic">Topic</label>
+            <select id="post-topic" name="topic">
+              <option value="">(none)</option>
+              <option value="motion">Motion</option>
+              <option value="webdev">WebDev</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="post-subtopic">Subtopic</label>
+            <input id="post-subtopic" type="text" name="subtopic" />
+          </div>
+          <div class="form-field">
+            <label for="post-date">Date</label>
+            <input id="post-date" type="date" name="date" required />
+          </div>
+          <div class="form-field">
+            <label for="post-body">Body</label>
+            <textarea id="post-body" name="body" rows="10"></textarea>
+          </div>
+          <div class="form-field">
+            <label for="post-image">Image (optional)</label>
+            <input id="post-image" type="file" name="image" accept="image/*" />
+          </div>
+          <button type="submit">Create post</button>
+          <p id="post-status" class="status"></p>
+        </form>
+      </div>
+
+      <p style="margin-top: 20px"><a href="edvin.html">← Back to posts</a></p>
+    </div>
+
+    <script type="module" src="../javascript/newPost.js"></script>
+  </body>
+</html>
