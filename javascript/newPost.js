@@ -1,11 +1,8 @@
 import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
 
-const loginSection = document.getElementById("login-section");
+const signedOutWarning = document.getElementById("signed-out-warning");
 const postSection = document.getElementById("post-section");
 const userEmailEl = document.getElementById("user-email");
-const loginForm = document.getElementById("login-form");
-const loginError = document.getElementById("login-error");
-const logoutBtn = document.getElementById("logout-btn");
 const postForm = document.getElementById("post-form");
 const postStatus = document.getElementById("post-status");
 
@@ -15,11 +12,11 @@ async function refreshAuthUI() {
   } = await supabase.auth.getSession();
   const user = session?.user ?? null;
   if (user) {
-    loginSection.style.display = "none";
+    signedOutWarning.style.display = "none";
     postSection.style.display = "";
     userEmailEl.textContent = user.email ?? "";
   } else {
-    loginSection.style.display = "";
+    signedOutWarning.style.display = "";
     postSection.style.display = "none";
     userEmailEl.textContent = "";
   }
@@ -36,19 +33,6 @@ async function initializeAuthUI() {
 }
 
 initializeAuthUI();
-
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  loginError.textContent = "";
-  const email = loginForm.email.value.trim();
-  const password = loginForm.password.value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) loginError.textContent = error.message;
-});
-
-logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
-});
 
 postForm.addEventListener("submit", async (e) => {
   e.preventDefault();
