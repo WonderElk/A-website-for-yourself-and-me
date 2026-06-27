@@ -18,7 +18,6 @@ const profileSubmitBtn = document.getElementById("profile-submit-btn");
 const cancelProfileBtn = document.getElementById("cancel-profile-btn");
 const profileStatus = document.getElementById("profile-status");
 const myPageLink = document.getElementById("my-page-link");
-const editProfileBtn = document.getElementById("edit-profile-btn");
 
 let userProfile = null;
 
@@ -141,21 +140,6 @@ profileForm.addEventListener("submit", async (e) => {
   profileStatus.textContent = "Profile saved successfully!";
   
   await refreshAuthUI();
-});
-
-editProfileBtn.addEventListener("click", () => {
-  if (!userProfile) return;
-  profileForm.username.value = userProfile.username;
-  profileForm.bio.value = userProfile.biography || "";
-  
-  profileHeading.textContent = "Edit profile";
-  profileIntroText.textContent = "Modify your username or biography below.";
-  profileSubmitBtn.textContent = "Save changes";
-  cancelProfileBtn.style.display = "";
-  profileStatus.textContent = "";
-
-  profileSection.style.display = "";
-  postSection.style.display = "none";
 });
 
 cancelProfileBtn.addEventListener("click", () => {

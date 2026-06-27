@@ -1,6 +1,101 @@
 import { supabase, POST_IMAGES_BUCKET } from './supabase.js';
 
 let currentAuthorProfile = null;
+let profileEditorInitialized = false;
+
+function setProfileEditorVisible(isVisible) {
+  const section = document.getElementById('profile-edit-section');
+  if (section) {
+    section.style.display = isVisible ? '' : 'none';
+  }
+}
+
+function populateProfileForm() {
+  const usernameInput = document.getElementById('profile-username');
+  const bioInput = document.getElementById('profile-bio');
+  const statusEl = document.getElementById('profile-status');
+
+  if (usernameInput) usernameInput.value = currentAuthorProfile?.username || '';
+  if (bioInput) bioInput.value = currentAuthorProfile?.biography || '';
+  if (statusEl) statusEl.textContent = '';
+}
+
+function setupProfileEditor() {
+  if (profileEditorInitialized) return;
+
+  const editProfileBtn = document.getElementById('edit-profile-btn');
+  const cancelBtn = document.getElementById('cancel-profile-btn');
+  const form = document.getElementById('profile-edit-form');
+
+  if (!editProfileBtn || !cancelBtn || !form) return;
+
+  editProfileBtn.addEventListener('click', () => {
+    if (!currentAuthorProfile) return;
+    populateProfileForm();
+    setProfileEditorVisible(true);
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    setProfileEditorVisible(false);
+    const statusEl = document.getElementById('profile-status');
+    if (statusEl) statusEl.textContent = '';
+  });
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const statusEl = document.getElementById('profile-status');
+    if (!statusEl || !currentAuthorProfile) return;
+
+    statusEl.style.color = '';
+    statusEl.textContent = 'Saving profile...';
+
+    const usernameInput = document.getElementById('profile-username');
+    const bioInput = document.getElementById('profile-bio');
+    const username = usernameInput?.value.trim().toLowerCase() || '';
+    const biography = bioInput?.value.trim() || '';
+
+    if (!username) {
+      statusEl.style.color = 'red';
+      statusEl.textContent = 'Username is required.';
+      return;
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ username, biography })
+      .eq('id', currentAuthorProfile.id);
+
+    if (error) {
+      statusEl.style.color = 'red';
+      if (error.code === '23505' || (error.message && error.message.includes('unique'))) {
+        statusEl.textContent = 'Username is already taken. Please choose another one.';
+      } else {
+        statusEl.textContent = 'Failed to save profile: ' + error.message;
+      }
+      return;
+    }
+
+    currentAuthorProfile = { ...currentAuthorProfile, username, biography };
+
+    const authorDiv = document.querySelector('author-div');
+    if (authorDiv) {
+      authorDiv.setAttribute('header', `${username}'s page`);
+      authorDiv.setAttribute('content', biography || 'No biography provided.');
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set('author', username);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+
+    statusEl.style.color = 'green';
+    statusEl.textContent = 'Profile saved successfully!';
+    setProfileEditorVisible(false);
+    await loadPosts();
+  });
+
+  profileEditorInitialized = true;
+}
 
 async function loadPosts() {
   const container = document.getElementById('posts');
@@ -38,6 +133,7 @@ async function loadPosts() {
   }
 
   currentAuthorProfile = profile;
+  setupProfileEditor();
 
   // Update profile header and bio
   const authorDiv = document.querySelector('author-div');
@@ -54,7 +150,9 @@ async function loadPosts() {
   const currentUser = session?.user;
   if (currentUser && currentUser.id === profile.id) {
     const newPostBtn = document.getElementById('new-post-btn');
+    const editProfileBtn = document.getElementById('edit-profile-btn');
     if (newPostBtn) newPostBtn.style.display = '';
+    if (editProfileBtn) editProfileBtn.style.display = '';
   }
 
   // Fetch posts for this author
