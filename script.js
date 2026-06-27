@@ -1,14 +1,26 @@
 
 /* CLASSES */
 // Author header
-class AuthorDiv extends HTMLElement{
-  connectedCallback() {
-    // Input
-    const img = this.getAttribute("img");
-    const header = this.getAttribute("header").replace("\n", "<br>");
-    const content = this.getAttribute("content"); 
+class AuthorDiv extends HTMLElement {
+  static get observedAttributes() {
+    return ["img", "header", "content"];
+  }
 
-    // HTML
+  attributeChangedCallback(name, oldValue, newValue) {
+    if (oldValue !== newValue) {
+      this.render();
+    }
+  }
+
+  connectedCallback() {
+    this.render();
+  }
+
+  render() {
+    const img = this.getAttribute("img") || "meerkats.jpg";
+    const header = (this.getAttribute("header") || "Author's page").replace(/\n/g, "<br>");
+    const content = this.getAttribute("content") || "";
+
     this.innerHTML = `
     <div class="container">
       <div class="flex-container">
@@ -17,11 +29,11 @@ class AuthorDiv extends HTMLElement{
         </a>
         <div class="intro">
           <h2 class="underline">${header}</h2>
-          <p>${content}</p>
+          <p style="white-space: pre-wrap;">${content}</p>
         </div>
       </div>
 
-      <div class = "dropdown" style="margin-top:15px;">
+      <div class="dropdown" style="margin-top:15px;">
         <select id="topic-filter">
           <option value="all">Topic</option>
           <option value="motion">Motion</option>
@@ -31,5 +43,5 @@ class AuthorDiv extends HTMLElement{
     </div>
     `;
   }
-} 
+}
 customElements.define("author-div", AuthorDiv);
