@@ -7,7 +7,6 @@ const logoutBtn = document.getElementById("index-logout-btn");
 const loginForm = document.getElementById("index-login-form");
 const loginError = document.getElementById("index-login-error");
 const signInSection = document.getElementById("sign-in-section");
-const signedOutSection = document.getElementById("signed-out-section");
 
 async function refreshAuthUI() {
   const {
@@ -19,13 +18,11 @@ async function refreshAuthUI() {
     authHeading.textContent = "Signed in";
     signedInMessage.style.display = "block";
     signInSection.style.display = "none";
-    signedOutSection.style.display = "none";
     signedInEmail.textContent = user.email ?? "";
   } else {
     authHeading.textContent = "Sign in";
     signedInMessage.style.display = "none";
     signInSection.style.display = "block";
-    signedOutSection.style.display = "block";
     signedInEmail.textContent = "";
   }
 }

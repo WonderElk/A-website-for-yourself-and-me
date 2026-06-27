@@ -46,7 +46,7 @@ requestForm.addEventListener("submit", async (event) => {
   requestStatus.textContent = "Sending reset email...";
 
   const email = requestForm.email.value.trim();
-  const redirectTo = `${window.location.origin}/authors/reset-password.html`;
+  const redirectTo = `${window.location.origin}/reset-password.html`;
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo,

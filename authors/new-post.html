@@ -45,14 +45,30 @@
     <div class="container">
       <h2 class="underline">New post</h2>
 
-      <div id="signed-out-warning" style="display: none; margin-bottom: 16px">
-        <p>You must sign in on the homepage before creating a post.</p>
-        <p><a href="../index.html">Go to homepage</a></p>
+      <div id="login-section" style="display: none; margin-bottom: 24px">
+        <p>You must sign in to create a post.</p>
+        <form id="login-form">
+          <div class="form-field">
+            <label for="login-email">Email</label>
+            <input id="login-email" type="email" name="email" required />
+          </div>
+          <div class="form-field">
+            <label for="login-password">Password</label>
+            <input id="login-password" type="password" name="password" required />
+          </div>
+          <button type="submit">Sign in</button>
+          <p style="margin-top: 10px">
+            <a href="../reset-password.html">Forgot password?</a>
+          </p>
+          <p id="login-error" class="status" style="color: red"></p>
+        </form>
       </div>
 
       <div id="post-section" style="display: none">
         <p>
           Logged in as <strong><span id="user-email"></span></strong>
+          &nbsp;
+          <button id="logout-btn" type="button">Log out</button>
         </p>
 
         <form id="post-form">
