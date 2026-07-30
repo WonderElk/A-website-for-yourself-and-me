@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign in</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      .form-field {
+        display: block;
+        margin-bottom: 14px;
+      }
+
+      .form-field label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 4px;
+      }
+
+      .form-field input[type="email"],
+      .form-field input[type="password"] {
+        width: 100%;
+        padding: 8px;
+        font-size: 16px;
+        border-radius: 6px;
+        border: 1px solid #999;
+        box-sizing: border-box;
+      }
+
+      button {
+        padding: 8px 16px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 6px;
+      }
+
+      .status {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2 class="underline" id="auth-heading">Sign in</h2>
+
+      <section id="auth-panel" class="auth-panel" style="margin-bottom: 24px">
+        <div id="signed-in-message" style="display: none; margin-bottom: 14px">
+          <p>
+            Signed in as <strong><span id="signed-in-email"></span></strong>
+            <button id="index-logout-btn" type="button">Log out</button>
+          </p>
+        </div>
+
+        <div id="sign-in-section" style="display: none; margin-bottom: 14px">
+          <p>Sign in to create posts and manage your author page.</p>
+          <form id="index-login-form">
+            <div class="form-field">
+              <label for="index-login-email">Email</label>
+              <input
+                id="index-login-email"
+                name="email"
+                type="email"
+                required
+              />
+            </div>
+            <div class="form-field">
+              <label for="index-login-password">Password</label>
+              <input
+                id="index-login-password"
+                name="password"
+                type="password"
+                required
+              />
+            </div>
+            <button type="submit">Sign in</button>
+            <p style="margin-top: 10px">
+              <a href="reset-password.html">Forgot password?</a>
+            </p>
+            <p id="index-login-error" class="status" style="color: red"></p>
+          </form>
+        </div>
+
+
+      </section>
+
+      <p><a href="index.html">← Back to homepage</a></p>
+    </div>
+
+    <script type="module" src="javascript/indexAuth.js"></script>
+  </body>
+</html>

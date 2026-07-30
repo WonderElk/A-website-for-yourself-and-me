@@ -18,7 +18,6 @@
       .form-field input[type="text"],
       .form-field input[type="email"],
       .form-field input[type="password"],
-      .form-field input[type="date"],
       .form-field select,
       .form-field textarea {
         width: 100%;
@@ -46,9 +45,8 @@
     <div class="container">
       <h2 class="underline">New post</h2>
 
-      <div id="login-section" style="display: none">
-        <p>You must log in to create a post.</p>
-        <p><a href="reset-password.html">Forgot password?</a></p>
+      <div id="login-section" style="display: none; margin-bottom: 24px">
+        <p>You must sign in to create a post.</p>
         <form id="login-form">
           <div class="form-field">
             <label for="login-email">Email</label>
@@ -56,21 +54,39 @@
           </div>
           <div class="form-field">
             <label for="login-password">Password</label>
-            <input
-              id="login-password"
-              type="password"
-              name="password"
-              required
-            />
+            <input id="login-password" type="password" name="password" required />
           </div>
-          <button type="submit">Log in</button>
+          <button type="submit">Sign in</button>
+          <p style="margin-top: 10px">
+            <a href="../reset-password.html">Forgot password?</a>
+          </p>
           <p id="login-error" class="status" style="color: red"></p>
+        </form>
+      </div>
+
+      <div id="profile-section" style="display: none; margin-bottom: 24px;">
+        <h3 class="underline" id="profile-heading">Create your profile</h3>
+        <p id="profile-intro-text">Before you can post, you must create an author profile.</p>
+        <form id="profile-form">
+          <div class="form-field">
+            <label for="profile-username">Username</label>
+            <input id="profile-username" type="text" name="username" required minlength="3" pattern="^[a-zA-Z0-9_]+$" title="Only alphanumeric characters and underscores are allowed" />
+          </div>
+          <div class="form-field">
+            <label for="profile-bio">Biography</label>
+            <textarea id="profile-bio" name="bio" rows="4" placeholder="Tell readers about yourself..."></textarea>
+          </div>
+          <button type="submit" id="profile-submit-btn">Create profile</button>
+          <button type="button" id="cancel-profile-btn" style="display: none; margin-left: 10px;">Cancel</button>
+          <p id="profile-status" class="status"></p>
         </form>
       </div>
 
       <div id="post-section" style="display: none">
         <p>
           Logged in as <strong><span id="user-email"></span></strong>
+          &nbsp;
+          <a id="my-page-link" href="#" style="font-weight: bold; margin-left: 10px;">view your page</a>
           &nbsp;
           <button id="logout-btn" type="button">Log out</button>
         </p>
@@ -91,10 +107,6 @@
           <div class="form-field">
             <label for="post-subtopic">Subtopic</label>
             <input id="post-subtopic" type="text" name="subtopic" />
-          </div>
-          <div class="form-field">
-            <label for="post-date">Date</label>
-            <input id="post-date" type="date" name="date" required />
           </div>
           <div class="form-field">
             <label for="post-body">Body</label>

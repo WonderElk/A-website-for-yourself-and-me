@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--Website structure-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edvin's page</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+
+<!---Website Contents-->
+<body>
+  <!--Intro to authors page-->
+  <author-div 
+    header="Loading..." 
+    img="meerkats.jpg" 
+    content="Loading biography...">
+  </author-div>
+  <div class="container" style="text-align: right; display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+    <button type="button" id="edit-profile-btn" style="display: none;">Edit profile</button>
+    <a href="new-post.html" id="new-post-btn" style="display: none;"><button type="button">+ New post</button></a>
+  </div>
+
+  <div id="profile-edit-section" style="display: none; margin-bottom: 20px;" class="container">
+    <h3 class="underline">Edit Profile</h3>
+    <form id="profile-edit-form">
+      <div class="form-field" style="display: block; margin-bottom: 14px;">
+        <label for="profile-username" style="display: block; font-weight: bold; margin-bottom: 4px;">Username</label>
+        <input id="profile-username" type="text" name="username" required minlength="3" pattern="^[a-zA-Z0-9_]+$" title="Only alphanumeric characters and underscores are allowed" style="width: 100%; padding: 8px; font-size: 16px; border-radius: 6px; border: 1px solid #999; box-sizing: border-box;" />
+      </div>
+      <div class="form-field" style="display: block; margin-bottom: 14px;">
+        <label for="profile-bio" style="display: block; font-weight: bold; margin-bottom: 4px;">Biography</label>
+        <textarea id="profile-bio" name="bio" rows="4" placeholder="Tell readers about yourself..." style="width: 100%; padding: 8px; font-size: 16px; border-radius: 6px; border: 1px solid #999; box-sizing: border-box; resize: vertical;"></textarea>
+      </div>
+      <button type="submit" id="profile-submit-btn">Save profile</button>
+      <button type="button" id="cancel-profile-btn" style="margin-left: 10px;">Cancel</button>
+      <p id="profile-status" style="margin-top: 10px;"></p>
+    </form>
+  </div>
+
+  <!--Posts -->
+  <div id="posts" aria-live="polite">Loading posts...</div>
+  <script src="../script.js"></script>
+  <script type="module" src="../javascript/postManager.js"></script>
+</body>
+
+</html>
