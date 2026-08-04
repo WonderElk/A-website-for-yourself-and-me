@@ -152,50 +152,58 @@ postForm.addEventListener("submit", async (e) => {
   postStatus.style.color = "";
   postStatus.textContent = "Creating post...";
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) {
-    postStatus.style.color = "red";
-    postStatus.textContent = "You are not logged in.";
-    return;
-  }
-
-  let imagePath = null;
-  const file = postForm.image.files[0];
-  if (file) {
-    const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
-    const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
-    const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(POST_IMAGES_BUCKET)
-      .upload(path, file, { contentType: file.type || undefined });
-    if (uploadError) {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) {
       postStatus.style.color = "red";
-      postStatus.textContent = "Image upload failed: " + uploadError.message;
+      postStatus.textContent = "You are not logged in.";
       return;
     }
-    imagePath = path;
-  }
 
-  const { error: insertError } = await supabase.from("posts").insert({
-    title: postForm.title.value.trim(),
-    topic: postForm.topic.value || null,
-    subtopic: postForm.subtopic.value.trim() || null,
-    date: postForm.date.value,
-    body: postForm.body.value || null,
-    image_path: imagePath,
-    author_id: user.id,
-  });
+    let imagePath = null;
+    const file = postForm.image.files[0];
+    if (file) {
+      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+      const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
+      const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .upload(path, file, { contentType: file.type || undefined });
+      if (uploadError) {
+        postStatus.style.color = "red";
+        postStatus.textContent = "Image upload failed: " + uploadError.message;
+        return;
+      }
+      imagePath = path;
+    }
 
-  if (insertError) {
+    const postData = {
+      title: postForm.title.value.trim(),
+      topic: postForm.topic.value || null,
+      subtopic: postForm.subtopic.value.trim() || null,
+      date: new Date().toISOString().split("T")[0],
+      body: postForm.body.value || null,
+      image_path: imagePath,
+      author_id: user.id,
+    };
+
+    const { error: insertError } = await supabase.from("posts").insert(postData);
+
+    if (insertError) {
+      postStatus.style.color = "red";
+      postStatus.textContent = "Failed to save post: " + insertError.message;
+      return;
+    }
+
+    postStatus.style.color = "green";
+    postStatus.textContent = "Post created.";
+    postForm.reset();
+  } catch (err) {
+    console.error("Error creating post:", err);
     postStatus.style.color = "red";
-    postStatus.textContent = "Failed to save post: " + insertError.message;
-    return;
+    postStatus.textContent = "Error creating post: " + (err.message || err);
   }
-
-  postStatus.style.color = "green";
-  postStatus.textContent = "Post created.";
-  postForm.reset();
 });
