@@ -97,6 +97,17 @@ function setupProfileEditor() {
   profileEditorInitialized = true;
 }
 
+function showPostsMessage(message) {
+  const container = document.getElementById('posts');
+  if (!container) return;
+
+  container.innerHTML = '';
+  const messageEl = document.createElement('div');
+  messageEl.className = 'container';
+  messageEl.textContent = message;
+  container.appendChild(messageEl);
+}
+
 async function loadPosts() {
   const container = document.getElementById('posts');
   if (!container) return;
@@ -105,7 +116,7 @@ async function loadPosts() {
   const username = params.get('author');
 
   if (!username) {
-    container.textContent = 'No author specified.';
+    showPostsMessage('No author specified.');
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', 'No Author');
@@ -123,7 +134,7 @@ async function loadPosts() {
 
   if (profileError || !profile) {
     console.error('Failed to load profile:', profileError);
-    container.textContent = `Author "${username}" not found.`;
+    showPostsMessage(`Author "${username}" not found.`);
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', 'Author Not Found');
@@ -165,13 +176,13 @@ async function loadPosts() {
 
   if (error) {
     console.error('Failed to load posts:', error);
-    container.textContent = 'Could not load posts.';
+    showPostsMessage('Could not load posts.');
     return;
   }
 
   container.innerHTML = '';
   if (posts.length === 0) {
-    container.textContent = 'No posts yet.';
+    showPostsMessage('No posts yet.');
     return;
   }
 
