@@ -13,10 +13,12 @@ function setProfileEditorVisible(isVisible) {
 function populateProfileForm() {
   const usernameInput = document.getElementById('profile-username');
   const bioInput = document.getElementById('profile-bio');
+  const imageInput = document.getElementById('profile-image');
   const statusEl = document.getElementById('profile-status');
 
   if (usernameInput) usernameInput.value = currentAuthorProfile?.username || '';
   if (bioInput) bioInput.value = currentAuthorProfile?.biography || '';
+  if (imageInput) imageInput.value = '';
   if (statusEl) statusEl.textContent = '';
 }
 
@@ -52,6 +54,7 @@ function setupProfileEditor() {
 
     const usernameInput = document.getElementById('profile-username');
     const bioInput = document.getElementById('profile-bio');
+    const imageInput = document.getElementById('profile-image');
     const username = usernameInput?.value.trim().toLowerCase() || '';
     const biography = bioInput?.value.trim() || '';
 
@@ -61,9 +64,27 @@ function setupProfileEditor() {
       return;
     }
 
+    let newAvatarPath = currentAuthorProfile.avatar_path || null;
+    const file = imageInput?.files?.[0];
+    if (file) {
+      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+      const ext = extMatch ? extMatch[1].toLowerCase() : 'bin';
+      const path = `avatars/${currentAuthorProfile.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .upload(path, file, { contentType: file.type || undefined });
+
+      if (uploadError) {
+        statusEl.style.color = 'red';
+        statusEl.textContent = 'Image upload failed: ' + uploadError.message;
+        return;
+      }
+      newAvatarPath = path;
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ username, biography })
+      .update({ username, biography, avatar_path: newAvatarPath })
       .eq('id', currentAuthorProfile.id);
 
     if (error) {
@@ -76,12 +97,23 @@ function setupProfileEditor() {
       return;
     }
 
-    currentAuthorProfile = { ...currentAuthorProfile, username, biography };
+    currentAuthorProfile = { ...currentAuthorProfile, username, biography, avatar_path: newAvatarPath };
+
+    let avatarUrl = 'meerkats.jpg';
+    if (newAvatarPath) {
+      const { data } = supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .getPublicUrl(newAvatarPath);
+      if (data?.publicUrl) {
+        avatarUrl = data.publicUrl;
+      }
+    }
 
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', `${username}'s page`);
       authorDiv.setAttribute('content', biography || 'No biography provided.');
+      authorDiv.setAttribute('img', avatarUrl);
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -97,6 +129,17 @@ function setupProfileEditor() {
   profileEditorInitialized = true;
 }
 
+function showPostsMessage(message) {
+  const container = document.getElementById('posts');
+  if (!container) return;
+
+  container.innerHTML = '';
+  const messageEl = document.createElement('div');
+  messageEl.className = 'container';
+  messageEl.textContent = message;
+  container.appendChild(messageEl);
+}
+
 async function loadPosts() {
   const container = document.getElementById('posts');
   if (!container) return;
@@ -105,7 +148,7 @@ async function loadPosts() {
   const username = params.get('author');
 
   if (!username) {
-    container.textContent = 'No author specified.';
+    showPostsMessage('No author specified.');
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', 'No Author');
@@ -123,7 +166,7 @@ async function loadPosts() {
 
   if (profileError || !profile) {
     console.error('Failed to load profile:', profileError);
-    container.textContent = `Author "${username}" not found.`;
+    showPostsMessage(`Author "${username}" not found.`);
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', 'Author Not Found');
@@ -135,12 +178,21 @@ async function loadPosts() {
   currentAuthorProfile = profile;
   setupProfileEditor();
 
-  // Update profile header and bio
+  // Update profile header, bio, and avatar
   const authorDiv = document.querySelector('author-div');
   if (authorDiv) {
     authorDiv.setAttribute('header', `${profile.username}'s page`);
     authorDiv.setAttribute('content', profile.biography || 'No biography provided.');
-    authorDiv.setAttribute('img', 'meerkats.jpg');
+    let avatarUrl = 'meerkats.jpg';
+    if (profile.avatar_path) {
+      const { data } = supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .getPublicUrl(profile.avatar_path);
+      if (data?.publicUrl) {
+        avatarUrl = data.publicUrl;
+      }
+    }
+    authorDiv.setAttribute('img', avatarUrl);
   }
 
   // Check if current user is the owner of this page
@@ -148,10 +200,14 @@ async function loadPosts() {
     data: { session },
   } = await supabase.auth.getSession();
   const currentUser = session?.user;
-  if (currentUser && currentUser.id === profile.id) {
+  const isOwner = Boolean(currentUser && currentUser.id === profile.id);
+  if (isOwner) {
     const newPostBtn = document.getElementById('new-post-btn');
     const editProfileBtn = document.getElementById('edit-profile-btn');
-    if (newPostBtn) newPostBtn.style.display = '';
+    if (newPostBtn) {
+      newPostBtn.style.display = '';
+      newPostBtn.href = `new-post.html?author=${encodeURIComponent(profile.username)}`;
+    }
     if (editProfileBtn) editProfileBtn.style.display = '';
   }
 
@@ -165,23 +221,23 @@ async function loadPosts() {
 
   if (error) {
     console.error('Failed to load posts:', error);
-    container.textContent = 'Could not load posts.';
+    showPostsMessage('Could not load posts.');
     return;
   }
 
   container.innerHTML = '';
   if (posts.length === 0) {
-    container.textContent = 'No posts yet.';
+    showPostsMessage('No posts yet.');
     return;
   }
 
   for (const post of posts) {
-    container.appendChild(renderPost(post));
+    container.appendChild(renderPost(post, isOwner));
   }
   applyTopicFilter();
 }
 
-function renderPost(post) {
+function renderPost(post, isOwner = false) {
   const wrapper = document.createElement('div');
   wrapper.className = 'container post';
   wrapper.style.backgroundColor = '#f0f0f0';
@@ -193,6 +249,50 @@ function renderPost(post) {
 
   const inner = document.createElement('div');
   inner.style.marginLeft = '20px';
+
+  if (isOwner) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete post';
+    deleteBtn.style.float = 'right';
+    deleteBtn.style.backgroundColor = '#e63946';
+    deleteBtn.style.color = '#fff';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.padding = '6px 12px';
+    deleteBtn.style.borderRadius = '4px';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.fontSize = '14px';
+
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Are you sure you want to delete "${post.title}"?`)) return;
+
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+
+      if (post.image_path) {
+        await supabase.storage.from(POST_IMAGES_BUCKET).remove([post.image_path]);
+      }
+
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id);
+
+      if (error) {
+        alert('Failed to delete post: ' + error.message);
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete post';
+      } else {
+        wrapper.remove();
+        const container = document.getElementById('posts');
+        if (container && container.querySelectorAll('.post').length === 0) {
+          showPostsMessage('No posts yet.');
+        }
+      }
+    });
+
+    inner.appendChild(deleteBtn);
+  }
 
   const h2 = document.createElement('h2');
   h2.className = 'underline';

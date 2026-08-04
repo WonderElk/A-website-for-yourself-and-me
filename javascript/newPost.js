@@ -18,8 +18,25 @@ const profileSubmitBtn = document.getElementById("profile-submit-btn");
 const cancelProfileBtn = document.getElementById("cancel-profile-btn");
 const profileStatus = document.getElementById("profile-status");
 const myPageLink = document.getElementById("my-page-link");
+const backLink = document.getElementById("back-link");
 
 let userProfile = null;
+
+function updateBackLink(targetUsername) {
+  if (!backLink) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const authorFromQuery = params.get("author")?.trim();
+  const resolvedUsername = authorFromQuery || targetUsername || "";
+
+  if (resolvedUsername) {
+    backLink.href = `author.html?author=${encodeURIComponent(resolvedUsername)}`;
+    backLink.textContent = "← Back to profile";
+  } else {
+    backLink.href = "../index.html";
+    backLink.textContent = "← Back to posts";
+  }
+}
 
 async function refreshAuthUI() {
   const {
@@ -42,6 +59,7 @@ async function refreshAuthUI() {
       postSection.style.display = "";
       userEmailEl.textContent = user.email ?? "";
       myPageLink.href = `author.html?author=${profile.username}`;
+      updateBackLink(profile.username);
     } else {
       userProfile = null;
       loginSection.style.display = "none";
@@ -54,6 +72,7 @@ async function refreshAuthUI() {
       profileSubmitBtn.textContent = "Create profile";
       cancelProfileBtn.style.display = "none";
       profileForm.reset();
+      updateBackLink(null);
     }
   } else {
     userProfile = null;
@@ -61,6 +80,7 @@ async function refreshAuthUI() {
     profileSection.style.display = "none";
     postSection.style.display = "none";
     userEmailEl.textContent = "";
+    updateBackLink(null);
   }
 }
 
@@ -110,19 +130,36 @@ profileForm.addEventListener("submit", async (e) => {
   const username = profileForm.username.value.trim().toLowerCase();
   const biography = profileForm.bio.value.trim();
 
+  let avatarPath = userProfile?.avatar_path || null;
+  const file = profileForm.image?.files?.[0];
+  if (file) {
+    const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
+    const path = `avatars/${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from(POST_IMAGES_BUCKET)
+      .upload(path, file, { contentType: file.type || undefined });
+    if (uploadError) {
+      profileStatus.style.color = "red";
+      profileStatus.textContent = "Image upload failed: " + uploadError.message;
+      return;
+    }
+    avatarPath = path;
+  }
+
   let error = null;
   if (userProfile) {
     // Update
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ username, biography })
+      .update({ username, biography, avatar_path: avatarPath })
       .eq("id", user.id);
     error = updateError;
   } else {
     // Insert
     const { error: insertError } = await supabase
       .from("profiles")
-      .insert({ id: user.id, username, biography });
+      .insert({ id: user.id, username, biography, avatar_path: avatarPath });
     error = insertError;
   }
 
@@ -152,50 +189,58 @@ postForm.addEventListener("submit", async (e) => {
   postStatus.style.color = "";
   postStatus.textContent = "Creating post...";
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
-  if (!user) {
-    postStatus.style.color = "red";
-    postStatus.textContent = "You are not logged in.";
-    return;
-  }
-
-  let imagePath = null;
-  const file = postForm.image.files[0];
-  if (file) {
-    const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
-    const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
-    const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(POST_IMAGES_BUCKET)
-      .upload(path, file, { contentType: file.type || undefined });
-    if (uploadError) {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const user = session?.user;
+    if (!user) {
       postStatus.style.color = "red";
-      postStatus.textContent = "Image upload failed: " + uploadError.message;
+      postStatus.textContent = "You are not logged in.";
       return;
     }
-    imagePath = path;
-  }
 
-  const { error: insertError } = await supabase.from("posts").insert({
-    title: postForm.title.value.trim(),
-    topic: postForm.topic.value || null,
-    subtopic: postForm.subtopic.value.trim() || null,
-    date: postForm.date.value,
-    body: postForm.body.value || null,
-    image_path: imagePath,
-    author_id: user.id,
-  });
+    let imagePath = null;
+    const file = postForm.image.files[0];
+    if (file) {
+      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+      const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
+      const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .upload(path, file, { contentType: file.type || undefined });
+      if (uploadError) {
+        postStatus.style.color = "red";
+        postStatus.textContent = "Image upload failed: " + uploadError.message;
+        return;
+      }
+      imagePath = path;
+    }
 
-  if (insertError) {
+    const postData = {
+      title: postForm.title.value.trim(),
+      topic: postForm.topic.value || null,
+      subtopic: postForm.subtopic.value.trim() || null,
+      date: new Date().toISOString().split("T")[0],
+      body: postForm.body.value || null,
+      image_path: imagePath,
+      author_id: user.id,
+    };
+
+    const { error: insertError } = await supabase.from("posts").insert(postData);
+
+    if (insertError) {
+      postStatus.style.color = "red";
+      postStatus.textContent = "Failed to save post: " + insertError.message;
+      return;
+    }
+
+    postStatus.style.color = "green";
+    postStatus.textContent = "Post created.";
+    postForm.reset();
+  } catch (err) {
+    console.error("Error creating post:", err);
     postStatus.style.color = "red";
-    postStatus.textContent = "Failed to save post: " + insertError.message;
-    return;
+    postStatus.textContent = "Error creating post: " + (err.message || err);
   }
-
-  postStatus.style.color = "green";
-  postStatus.textContent = "Post created.";
-  postForm.reset();
 });

@@ -20,8 +20,11 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   username text unique not null check (char_length(username) >= 3),
   biography text,
+  avatar_path text,
   created_at timestamptz not null default now()
 );
+
+alter table public.profiles add column if not exists avatar_path text;
 
 -- Backfill profiles for all existing auth users to avoid foreign key violations
 insert into public.profiles (id, username, biography)

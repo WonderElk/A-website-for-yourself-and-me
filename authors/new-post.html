@@ -76,6 +76,10 @@
             <label for="profile-bio">Biography</label>
             <textarea id="profile-bio" name="bio" rows="4" placeholder="Tell readers about yourself..."></textarea>
           </div>
+          <div class="form-field">
+            <label for="profile-image">Profile picture (optional)</label>
+            <input id="profile-image" type="file" name="image" accept="image/*" />
+          </div>
           <button type="submit" id="profile-submit-btn">Create profile</button>
           <button type="button" id="cancel-profile-btn" style="display: none; margin-left: 10px;">Cancel</button>
           <p id="profile-status" class="status"></p>
@@ -121,7 +125,7 @@
         </form>
       </div>
 
-      <p style="margin-top: 20px"><a href="edvin.html">← Back to posts</a></p>
+      <p style="margin-top: 20px"><a id="back-link" href="../index.html">← Back to posts</a></p>
     </div>
 
     <script type="module" src="../javascript/newPost.js"></script>

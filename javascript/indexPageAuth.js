@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
 
 const signedInPanel = document.getElementById("index-signed-in-panel");
 const signedInEmail = document.getElementById("index-signed-in-email");
@@ -28,7 +28,7 @@ async function loadAuthors() {
 
   const { data: profiles, error } = await supabase
     .from("profiles")
-    .select("username")
+    .select("username, avatar_path")
     .order("username", { ascending: true });
 
   if (error) {
@@ -42,8 +42,18 @@ async function loadAuthors() {
     card.href = `authors/author.html?author=${profile.username}`;
     card.className = "image-card grow";
 
+    let avatarSrc = "img/meerkats.jpg";
+    if (profile.avatar_path) {
+      const { data } = supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .getPublicUrl(profile.avatar_path);
+      if (data?.publicUrl) {
+        avatarSrc = data.publicUrl;
+      }
+    }
+
     const img = document.createElement("img");
-    img.src = "img/meerkats.jpg";
+    img.src = avatarSrc;
     img.alt = `${profile.username}'s page`;
 
     card.appendChild(img);

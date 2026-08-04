@@ -33,6 +33,10 @@
         <label for="profile-bio" style="display: block; font-weight: bold; margin-bottom: 4px;">Biography</label>
         <textarea id="profile-bio" name="bio" rows="4" placeholder="Tell readers about yourself..." style="width: 100%; padding: 8px; font-size: 16px; border-radius: 6px; border: 1px solid #999; box-sizing: border-box; resize: vertical;"></textarea>
       </div>
+      <div class="form-field" style="display: block; margin-bottom: 14px;">
+        <label for="profile-image" style="display: block; font-weight: bold; margin-bottom: 4px;">Profile picture (optional)</label>
+        <input id="profile-image" type="file" name="image" accept="image/*" style="width: 100%; padding: 8px; font-size: 16px; border-radius: 6px; border: 1px solid #999; box-sizing: border-box;" />
+      </div>
       <button type="submit" id="profile-submit-btn">Save profile</button>
       <button type="button" id="cancel-profile-btn" style="margin-left: 10px;">Cancel</button>
       <p id="profile-status" style="margin-top: 10px;"></p>
@@ -40,7 +44,9 @@
   </div>
 
   <!--Posts -->
-  <div id="posts" aria-live="polite">Loading posts...</div>
+  <div id="posts" aria-live="polite">
+    <div class="container">Loading posts...</div>
+  </div>
   <script src="../script.js"></script>
   <script type="module" src="../javascript/postManager.js"></script>
 </body>
