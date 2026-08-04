@@ -162,7 +162,10 @@ async function loadPosts() {
   if (currentUser && currentUser.id === profile.id) {
     const newPostBtn = document.getElementById('new-post-btn');
     const editProfileBtn = document.getElementById('edit-profile-btn');
-    if (newPostBtn) newPostBtn.style.display = '';
+    if (newPostBtn) {
+      newPostBtn.style.display = '';
+      newPostBtn.href = `new-post.html?author=${encodeURIComponent(profile.username)}`;
+    }
     if (editProfileBtn) editProfileBtn.style.display = '';
   }
 

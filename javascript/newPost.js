@@ -18,8 +18,25 @@ const profileSubmitBtn = document.getElementById("profile-submit-btn");
 const cancelProfileBtn = document.getElementById("cancel-profile-btn");
 const profileStatus = document.getElementById("profile-status");
 const myPageLink = document.getElementById("my-page-link");
+const backLink = document.getElementById("back-link");
 
 let userProfile = null;
+
+function updateBackLink(targetUsername) {
+  if (!backLink) return;
+
+  const params = new URLSearchParams(window.location.search);
+  const authorFromQuery = params.get("author")?.trim();
+  const resolvedUsername = authorFromQuery || targetUsername || "";
+
+  if (resolvedUsername) {
+    backLink.href = `author.html?author=${encodeURIComponent(resolvedUsername)}`;
+    backLink.textContent = "← Back to profile";
+  } else {
+    backLink.href = "../index.html";
+    backLink.textContent = "← Back to posts";
+  }
+}
 
 async function refreshAuthUI() {
   const {
@@ -42,6 +59,7 @@ async function refreshAuthUI() {
       postSection.style.display = "";
       userEmailEl.textContent = user.email ?? "";
       myPageLink.href = `author.html?author=${profile.username}`;
+      updateBackLink(profile.username);
     } else {
       userProfile = null;
       loginSection.style.display = "none";
@@ -54,6 +72,7 @@ async function refreshAuthUI() {
       profileSubmitBtn.textContent = "Create profile";
       cancelProfileBtn.style.display = "none";
       profileForm.reset();
+      updateBackLink(null);
     }
   } else {
     userProfile = null;
@@ -61,6 +80,7 @@ async function refreshAuthUI() {
     profileSection.style.display = "none";
     postSection.style.display = "none";
     userEmailEl.textContent = "";
+    updateBackLink(null);
   }
 }
 
