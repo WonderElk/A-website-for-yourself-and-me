@@ -13,10 +13,12 @@ function setProfileEditorVisible(isVisible) {
 function populateProfileForm() {
   const usernameInput = document.getElementById('profile-username');
   const bioInput = document.getElementById('profile-bio');
+  const imageInput = document.getElementById('profile-image');
   const statusEl = document.getElementById('profile-status');
 
   if (usernameInput) usernameInput.value = currentAuthorProfile?.username || '';
   if (bioInput) bioInput.value = currentAuthorProfile?.biography || '';
+  if (imageInput) imageInput.value = '';
   if (statusEl) statusEl.textContent = '';
 }
 
@@ -52,6 +54,7 @@ function setupProfileEditor() {
 
     const usernameInput = document.getElementById('profile-username');
     const bioInput = document.getElementById('profile-bio');
+    const imageInput = document.getElementById('profile-image');
     const username = usernameInput?.value.trim().toLowerCase() || '';
     const biography = bioInput?.value.trim() || '';
 
@@ -61,9 +64,27 @@ function setupProfileEditor() {
       return;
     }
 
+    let newAvatarPath = currentAuthorProfile.avatar_path || null;
+    const file = imageInput?.files?.[0];
+    if (file) {
+      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+      const ext = extMatch ? extMatch[1].toLowerCase() : 'bin';
+      const path = `avatars/${currentAuthorProfile.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .upload(path, file, { contentType: file.type || undefined });
+
+      if (uploadError) {
+        statusEl.style.color = 'red';
+        statusEl.textContent = 'Image upload failed: ' + uploadError.message;
+        return;
+      }
+      newAvatarPath = path;
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({ username, biography })
+      .update({ username, biography, avatar_path: newAvatarPath })
       .eq('id', currentAuthorProfile.id);
 
     if (error) {
@@ -76,12 +97,23 @@ function setupProfileEditor() {
       return;
     }
 
-    currentAuthorProfile = { ...currentAuthorProfile, username, biography };
+    currentAuthorProfile = { ...currentAuthorProfile, username, biography, avatar_path: newAvatarPath };
+
+    let avatarUrl = 'meerkats.jpg';
+    if (newAvatarPath) {
+      const { data } = supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .getPublicUrl(newAvatarPath);
+      if (data?.publicUrl) {
+        avatarUrl = data.publicUrl;
+      }
+    }
 
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
       authorDiv.setAttribute('header', `${username}'s page`);
       authorDiv.setAttribute('content', biography || 'No biography provided.');
+      authorDiv.setAttribute('img', avatarUrl);
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -146,12 +178,21 @@ async function loadPosts() {
   currentAuthorProfile = profile;
   setupProfileEditor();
 
-  // Update profile header and bio
+  // Update profile header, bio, and avatar
   const authorDiv = document.querySelector('author-div');
   if (authorDiv) {
     authorDiv.setAttribute('header', `${profile.username}'s page`);
     authorDiv.setAttribute('content', profile.biography || 'No biography provided.');
-    authorDiv.setAttribute('img', 'meerkats.jpg');
+    let avatarUrl = 'meerkats.jpg';
+    if (profile.avatar_path) {
+      const { data } = supabase.storage
+        .from(POST_IMAGES_BUCKET)
+        .getPublicUrl(profile.avatar_path);
+      if (data?.publicUrl) {
+        avatarUrl = data.publicUrl;
+      }
+    }
+    authorDiv.setAttribute('img', avatarUrl);
   }
 
   // Check if current user is the owner of this page

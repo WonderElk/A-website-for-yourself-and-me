@@ -21,11 +21,16 @@ class AuthorDiv extends HTMLElement {
     const header = (this.getAttribute("header") || "Author's page").replace(/\n/g, "<br>");
     const content = this.getAttribute("content") || "";
 
+    let imgSrc = img;
+    if (!imgSrc.startsWith("http://") && !imgSrc.startsWith("https://") && !imgSrc.startsWith("/") && !imgSrc.startsWith("data:")) {
+      imgSrc = `../img/${imgSrc}`;
+    }
+
     this.innerHTML = `
     <div class="container">
       <div class="flex-container">
         <a href="../index.html" class="image-card">
-          <img src="../img/${img}" alt="Author image">
+          <img src="${imgSrc}" alt="Author image">
         </a>
         <div class="intro">
           <h2 class="underline">${header}</h2>

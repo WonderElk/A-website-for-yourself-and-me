@@ -130,19 +130,36 @@ profileForm.addEventListener("submit", async (e) => {
   const username = profileForm.username.value.trim().toLowerCase();
   const biography = profileForm.bio.value.trim();
 
+  let avatarPath = userProfile?.avatar_path || null;
+  const file = profileForm.image?.files?.[0];
+  if (file) {
+    const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+    const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
+    const path = `avatars/${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from(POST_IMAGES_BUCKET)
+      .upload(path, file, { contentType: file.type || undefined });
+    if (uploadError) {
+      profileStatus.style.color = "red";
+      profileStatus.textContent = "Image upload failed: " + uploadError.message;
+      return;
+    }
+    avatarPath = path;
+  }
+
   let error = null;
   if (userProfile) {
     // Update
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ username, biography })
+      .update({ username, biography, avatar_path: avatarPath })
       .eq("id", user.id);
     error = updateError;
   } else {
     // Insert
     const { error: insertError } = await supabase
       .from("profiles")
-      .insert({ id: user.id, username, biography });
+      .insert({ id: user.id, username, biography, avatar_path: avatarPath });
     error = insertError;
   }
 
