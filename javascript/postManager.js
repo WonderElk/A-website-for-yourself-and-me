@@ -200,7 +200,8 @@ async function loadPosts() {
     data: { session },
   } = await supabase.auth.getSession();
   const currentUser = session?.user;
-  if (currentUser && currentUser.id === profile.id) {
+  const isOwner = Boolean(currentUser && currentUser.id === profile.id);
+  if (isOwner) {
     const newPostBtn = document.getElementById('new-post-btn');
     const editProfileBtn = document.getElementById('edit-profile-btn');
     if (newPostBtn) {
@@ -231,12 +232,12 @@ async function loadPosts() {
   }
 
   for (const post of posts) {
-    container.appendChild(renderPost(post));
+    container.appendChild(renderPost(post, isOwner));
   }
   applyTopicFilter();
 }
 
-function renderPost(post) {
+function renderPost(post, isOwner = false) {
   const wrapper = document.createElement('div');
   wrapper.className = 'container post';
   wrapper.style.backgroundColor = '#f0f0f0';
@@ -248,6 +249,50 @@ function renderPost(post) {
 
   const inner = document.createElement('div');
   inner.style.marginLeft = '20px';
+
+  if (isOwner) {
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.textContent = 'Delete post';
+    deleteBtn.style.float = 'right';
+    deleteBtn.style.backgroundColor = '#e63946';
+    deleteBtn.style.color = '#fff';
+    deleteBtn.style.border = 'none';
+    deleteBtn.style.padding = '6px 12px';
+    deleteBtn.style.borderRadius = '4px';
+    deleteBtn.style.cursor = 'pointer';
+    deleteBtn.style.fontSize = '14px';
+
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Are you sure you want to delete "${post.title}"?`)) return;
+
+      deleteBtn.disabled = true;
+      deleteBtn.textContent = 'Deleting...';
+
+      if (post.image_path) {
+        await supabase.storage.from(POST_IMAGES_BUCKET).remove([post.image_path]);
+      }
+
+      const { error } = await supabase
+        .from('posts')
+        .delete()
+        .eq('id', post.id);
+
+      if (error) {
+        alert('Failed to delete post: ' + error.message);
+        deleteBtn.disabled = false;
+        deleteBtn.textContent = 'Delete post';
+      } else {
+        wrapper.remove();
+        const container = document.getElementById('posts');
+        if (container && container.querySelectorAll('.post').length === 0) {
+          showPostsMessage('No posts yet.');
+        }
+      }
+    });
+
+    inner.appendChild(deleteBtn);
+  }
 
   const h2 = document.createElement('h2');
   h2.className = 'underline';
