@@ -39,7 +39,7 @@ async function initializeAuthUI() {
 
 initializeAuthUI();
 
-loginForm.addEventListener("submit", async (e) => {
+/*loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   loginError.textContent = "";
   const email = loginForm.email.value.trim();
@@ -48,8 +48,30 @@ loginForm.addEventListener("submit", async (e) => {
   if (error) {
     loginError.textContent = error.message;
   }
-});
+});*/
 
 logoutBtn.addEventListener("click", async () => {
   await supabase.auth.signOut();
 });
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const username = loginForm.email.value.trim();
+  const password = loginForm.password.value;
+  const response = await fetch("http://localhost:8080/token", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ username, password }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    loginError.textContent = errorData.message || "Login failed";
+    return;
+  }
+
+  const data = await response.json();
+  console.log("Logged in to localhost backend:", data);
+})
