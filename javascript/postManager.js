@@ -21,7 +21,7 @@ document.addEventListener("change", e => {
 
 // Functions
 export async function loadPosts(author=null, limit=null){
-  const allPosts = await fetch("/posts.json").then(r => r.json());
+  const allPosts = await fetch("posts.json").then(r => r.json());
   // if author exists, then set posts to authors posts, and if not, set it to all posts
   let posts = author ? allPosts.filter(post => post.author === author) : allPosts; 
   
@@ -29,8 +29,6 @@ export async function loadPosts(author=null, limit=null){
     new Date(b.date) - new Date(a.date)
   );
   posts = limit ? posts.slice(0, limit) : posts;
-  console.log("posts response:", posts);
-
 
   const container = document.getElementById("posts")
   for (const post of posts) {
