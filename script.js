@@ -12,8 +12,8 @@ class AuthorDiv extends HTMLElement{
     this.innerHTML = `
     <div class="container">
       <div class="flex-container">
-        <a href="../index.html" class="image-card">
-          <img src="../img/${img}" alt="Author image">
+        <a href="/index.html" class="image-card">
+          <img src="/img/${img}" alt="Author image">
         </a>
         <div class="intro">
           <h2 class="underline">${header}</h2>

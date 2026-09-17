@@ -75,13 +75,21 @@ body {
 }
 
 h2 {
-  font-size: 40px;
+  font-size: 30px;
   margin-bottom: 18px;
 }
 
 p {
-  font-size: 22px;
+  font-size: 18px;
   margin-top:6px;
+}
+
+ol {
+  font-size: 16px;
+}
+
+ul {
+  font-size: 16px;
 }
 
 .underline {

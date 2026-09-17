@@ -11,6 +11,7 @@
 
 <!---Website Contents-->
 <body>
+  <!-- Authors & image links-->
   <div class="container flex-container">
     <div class="intro">
       <h2 class="underline">The common blog</h2>
@@ -18,14 +19,20 @@
       To navigate to an authors page, press their card.</p>
     </div>
 
-    <a href="authors/edvin.html" class="image-card grow">
+    <a href="/authors/edvin/edvin.html" class="image-card grow">
       <img src="img/meerkats.jpg" alt="edvin's page">
     </a>
 
-    <a href="tree.jpg" class="image-card grow">
+    <a href="/authors/jane-doe/jane-doe.html" class="image-card grow">
       <img src="img/tree.jpg" alt="Tree">
     </a>
-
   </div>
+  <!-- Home feed -->
+  <div id="posts"></div>
+  <script src="/script.js"></script>
+  <script type="module">
+    import {loadPosts} from '/javascript/postManager.js'
+    loadPosts();
+  </script>
 </body>
 </html>
