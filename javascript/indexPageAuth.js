@@ -1,5 +1,4 @@
-import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
-import { getCurrentUser, signOut } from "./backendAuth.js";
+import { assetUrl, authenticatedFetch, getCurrentUser, signOut } from "./backendAuth.js";
 
 const signedInPanel = document.getElementById("index-signed-in-panel");
 const signedInEmail = document.getElementById("index-signed-in-email");
@@ -24,15 +23,12 @@ async function loadAuthors() {
   const container = document.getElementById("dynamic-authors");
   if (!container) return;
 
-  const { data: profiles, error } = await supabase
-    .from("profiles")
-    .select("username, avatar_path")
-    .order("username", { ascending: true });
-
-  if (error) {
-    console.error("Failed to load profiles:", error);
+  const response = await authenticatedFetch("/profiles");
+  if (!response.ok) {
+    console.error("Failed to load profiles:", response.status);
     return;
   }
+  const profiles = await response.json();
 
   container.innerHTML = "";
   for (const profile of profiles) {
@@ -42,12 +38,7 @@ async function loadAuthors() {
 
     let avatarSrc = "img/meerkats.jpg";
     if (profile.avatar_path) {
-      const { data } = supabase.storage
-        .from(POST_IMAGES_BUCKET)
-        .getPublicUrl(profile.avatar_path);
-      if (data?.publicUrl) {
-        avatarSrc = data.publicUrl;
-      }
+      avatarSrc = assetUrl(profile.avatar_path);
     }
 
     const img = document.createElement("img");

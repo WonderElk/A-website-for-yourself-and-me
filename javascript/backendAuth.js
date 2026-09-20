@@ -56,3 +56,31 @@ export async function authenticatedFetch(path, options = {}) {
     headers,
   });
 }
+
+export async function uploadImage(file, folder) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+  const response = await authenticatedFetch("/uploads", {
+    method: "POST",
+    body: formData,
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || "Image upload failed");
+  }
+  return (await response.json()).path;
+}
+
+export async function deleteImage(path) {
+  const formData = new FormData();
+  formData.append("path", path);
+  await authenticatedFetch("/uploads", {
+    method: "DELETE",
+    body: formData,
+  });
+}
+
+export function assetUrl(path) {
+  return path?.startsWith("/") ? `${API_BASE_URL}${path}` : path;
+}

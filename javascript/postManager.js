@@ -1,5 +1,4 @@
-import { supabase, POST_IMAGES_BUCKET } from './supabase.js';
-import { authenticatedFetch, getCurrentUser } from './backendAuth.js';
+import { assetUrl, authenticatedFetch, deleteImage, getCurrentUser, uploadImage } from './backendAuth.js';
 
 let currentAuthorProfile = null;
 let profileEditorInitialized = false;
@@ -68,19 +67,13 @@ function setupProfileEditor() {
     let newAvatarPath = currentAuthorProfile.avatar_path || null;
     const file = imageInput?.files?.[0];
     if (file) {
-      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
-      const ext = extMatch ? extMatch[1].toLowerCase() : 'bin';
-      const path = `avatars/${currentAuthorProfile.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from(POST_IMAGES_BUCKET)
-        .upload(path, file, { contentType: file.type || undefined });
-
-      if (uploadError) {
+      try {
+        newAvatarPath = await uploadImage(file, 'avatars');
+      } catch (error) {
         statusEl.style.color = 'red';
-        statusEl.textContent = 'Image upload failed: ' + uploadError.message;
+        statusEl.textContent = 'Image upload failed: ' + error.message;
         return;
       }
-      newAvatarPath = path;
     }
 
     const response = await authenticatedFetch('/profiles/me', {
@@ -108,12 +101,7 @@ function setupProfileEditor() {
 
     let avatarUrl = 'meerkats.jpg';
     if (newAvatarPath) {
-      const { data } = supabase.storage
-        .from(POST_IMAGES_BUCKET)
-        .getPublicUrl(newAvatarPath);
-      if (data?.publicUrl) {
-        avatarUrl = data.publicUrl;
-      }
+      avatarUrl = assetUrl(newAvatarPath);
     }
 
     const authorDiv = document.querySelector('author-div');
@@ -177,6 +165,7 @@ async function loadPosts() {
     return;
   }
 
+  const profile = await profileResponse.json();
   currentAuthorProfile = profile;
   setupProfileEditor();
 
@@ -187,12 +176,7 @@ async function loadPosts() {
     authorDiv.setAttribute('content', profile.biography || 'No biography provided.');
     let avatarUrl = 'meerkats.jpg';
     if (profile.avatar_path) {
-      const { data } = supabase.storage
-        .from(POST_IMAGES_BUCKET)
-        .getPublicUrl(profile.avatar_path);
-      if (data?.publicUrl) {
-        avatarUrl = data.publicUrl;
-      }
+      avatarUrl = assetUrl(profile.avatar_path);
     }
     authorDiv.setAttribute('img', avatarUrl);
   }
@@ -266,7 +250,7 @@ function renderPost(post, isOwner = false) {
       deleteBtn.textContent = 'Deleting...';
 
       if (post.image_path) {
-        await supabase.storage.from(POST_IMAGES_BUCKET).remove([post.image_path]);
+        await deleteImage(post.image_path);
       }
 
       const response = await authenticatedFetch(`/posts/${post.id}`, {
@@ -306,14 +290,11 @@ function renderPost(post, isOwner = false) {
   }
 
   if (post.image_path) {
-    const { data } = supabase.storage
-      .from(POST_IMAGES_BUCKET)
-      .getPublicUrl(post.image_path);
     const imgCard = document.createElement('div');
     imgCard.className = 'image-card';
     imgCard.style.marginBottom = '15px';
     const img = document.createElement('img');
-    img.src = data.publicUrl;
+    img.src = assetUrl(post.image_path);
     img.alt = post.title ?? 'Post image';
     imgCard.appendChild(img);
     inner.appendChild(imgCard);

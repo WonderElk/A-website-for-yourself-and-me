@@ -1,9 +1,9 @@
-import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
 import {
   authenticatedFetch,
   getCurrentUser,
   signIn,
   signOut,
+  uploadImage,
 } from "./backendAuth.js";
 
 const loginSection = document.getElementById("login-section");
@@ -129,18 +129,13 @@ profileForm.addEventListener("submit", async (e) => {
   let avatarPath = userProfile?.avatar_path || null;
   const file = profileForm.image?.files?.[0];
   if (file) {
-    const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
-    const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
-    const path = `avatars/${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from(POST_IMAGES_BUCKET)
-      .upload(path, file, { contentType: file.type || undefined });
-    if (uploadError) {
+    try {
+      avatarPath = await uploadImage(file, "avatars");
+    } catch (error) {
       profileStatus.style.color = "red";
-      profileStatus.textContent = "Image upload failed: " + uploadError.message;
+      profileStatus.textContent = "Image upload failed: " + error.message;
       return;
     }
-    avatarPath = path;
   }
 
   const profileResponse = await authenticatedFetch(
@@ -190,18 +185,13 @@ postForm.addEventListener("submit", async (e) => {
     let imagePath = null;
     const file = postForm.image.files[0];
     if (file) {
-      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
-      const ext = extMatch ? extMatch[1].toLowerCase() : "bin";
-      const path = `${user.id}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from(POST_IMAGES_BUCKET)
-        .upload(path, file, { contentType: file.type || undefined });
-      if (uploadError) {
+      try {
+        imagePath = await uploadImage(file, "posts");
+      } catch (error) {
         postStatus.style.color = "red";
-        postStatus.textContent = "Image upload failed: " + uploadError.message;
+        postStatus.textContent = "Image upload failed: " + error.message;
         return;
       }
-      imagePath = path;
     }
 
     const postData = {
