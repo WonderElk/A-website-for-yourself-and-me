@@ -180,10 +180,7 @@ postForm.addEventListener("submit", async (e) => {
   postStatus.textContent = "Creating post...";
 
   try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const user = session?.user;
+    const user = await getCurrentUser();
     if (!user) {
       postStatus.style.color = "red";
       postStatus.textContent = "You are not logged in.";
@@ -214,14 +211,18 @@ postForm.addEventListener("submit", async (e) => {
       date: new Date().toISOString().split("T")[0],
       body: postForm.body.value || null,
       image_path: imagePath,
-      author_id: user.id,
     };
 
-    const { error: insertError } = await supabase.from("posts").insert(postData);
+    const response = await authenticatedFetch("/posts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(postData),
+    });
 
-    if (insertError) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       postStatus.style.color = "red";
-      postStatus.textContent = "Failed to save post: " + insertError.message;
+      postStatus.textContent = "Failed to save post: " + (errorData.detail || "Unknown error");
       return;
     }
 

@@ -1,4 +1,5 @@
 import { supabase, POST_IMAGES_BUCKET } from './supabase.js';
+import { authenticatedFetch, getCurrentUser } from './backendAuth.js';
 
 let currentAuthorProfile = null;
 let profileEditorInitialized = false;
@@ -82,17 +83,23 @@ function setupProfileEditor() {
       newAvatarPath = path;
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ username, biography, avatar_path: newAvatarPath })
-      .eq('id', currentAuthorProfile.id);
+    const response = await authenticatedFetch('/profiles/me', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username,
+        biography,
+        avatar_path: newAvatarPath,
+      }),
+    });
 
-    if (error) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       statusEl.style.color = 'red';
-      if (error.code === '23505' || (error.message && error.message.includes('unique'))) {
+      if (response.status === 409) {
         statusEl.textContent = 'Username is already taken. Please choose another one.';
       } else {
-        statusEl.textContent = 'Failed to save profile: ' + error.message;
+        statusEl.textContent = 'Failed to save profile: ' + (errorData.detail || 'Unknown error');
       }
       return;
     }
@@ -158,14 +165,9 @@ async function loadPosts() {
   }
 
   // Fetch author profile
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('username', username)
-    .maybeSingle();
-
-  if (profileError || !profile) {
-    console.error('Failed to load profile:', profileError);
+  const profileResponse = await authenticatedFetch(`/profiles/${encodeURIComponent(username)}`);
+  if (!profileResponse.ok) {
+    console.error('Failed to load profile:', profileResponse.status);
     showPostsMessage(`Author "${username}" not found.`);
     const authorDiv = document.querySelector('author-div');
     if (authorDiv) {
@@ -196,10 +198,7 @@ async function loadPosts() {
   }
 
   // Check if current user is the owner of this page
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const currentUser = session?.user;
+  const currentUser = await getCurrentUser();
   const isOwner = Boolean(currentUser && currentUser.id === profile.id);
   if (isOwner) {
     const newPostBtn = document.getElementById('new-post-btn');
@@ -212,18 +211,15 @@ async function loadPosts() {
   }
 
   // Fetch posts for this author
-  const { data: posts, error } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('author_id', profile.id)
-    .order('date', { ascending: false })
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Failed to load posts:', error);
+  const postsResponse = await authenticatedFetch(
+    `/profiles/${encodeURIComponent(username)}/posts`,
+  );
+  if (!postsResponse.ok) {
+    console.error('Failed to load posts:', postsResponse.status);
     showPostsMessage('Could not load posts.');
     return;
   }
+  const posts = await postsResponse.json();
 
   container.innerHTML = '';
   if (posts.length === 0) {
@@ -273,13 +269,13 @@ function renderPost(post, isOwner = false) {
         await supabase.storage.from(POST_IMAGES_BUCKET).remove([post.image_path]);
       }
 
-      const { error } = await supabase
-        .from('posts')
-        .delete()
-        .eq('id', post.id);
+      const response = await authenticatedFetch(`/posts/${post.id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        alert('Failed to delete post: ' + error.message);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        alert('Failed to delete post: ' + (errorData.detail || 'Unknown error'));
         deleteBtn.disabled = false;
         deleteBtn.textContent = 'Delete post';
       } else {
