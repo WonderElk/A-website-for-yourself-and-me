@@ -33,17 +33,6 @@ async function initializeAuthUI() {
 
 initializeAuthUI();
 
-/*loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  loginError.textContent = "";
-  const email = loginForm.email.value.trim();
-  const password = loginForm.password.value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    loginError.textContent = error.message;
-  }
-});*/
-
 logoutBtn.addEventListener("click", async () => {
   signOut();
   await refreshAuthUI();
