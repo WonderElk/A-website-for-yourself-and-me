@@ -1,4 +1,5 @@
 import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
+import { getCurrentUser, signOut } from "./backendAuth.js";
 
 const signedInPanel = document.getElementById("index-signed-in-panel");
 const signedInEmail = document.getElementById("index-signed-in-email");
@@ -6,10 +7,7 @@ const signedOutPanel = document.getElementById("index-signed-out-panel");
 const logoutBtn = document.getElementById("index-logout-btn");
 
 async function refreshIndexAuthUI() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const user = await getCurrentUser();
 
   if (user) {
     signedInPanel.style.display = "block";
@@ -64,10 +62,6 @@ async function loadAuthors() {
 async function initializeIndexAuthUI() {
   await refreshIndexAuthUI();
   await loadAuthors();
-  supabase.auth.onAuthStateChange(() => {
-    refreshIndexAuthUI();
-    loadAuthors();
-  });
   window.addEventListener("pageshow", () => {
     refreshIndexAuthUI();
     loadAuthors();
@@ -77,5 +71,6 @@ async function initializeIndexAuthUI() {
 initializeIndexAuthUI();
 
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  signOut();
+  await refreshIndexAuthUI();
 });

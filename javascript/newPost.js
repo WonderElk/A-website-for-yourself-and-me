@@ -1,4 +1,10 @@
 import { supabase, POST_IMAGES_BUCKET } from "./supabase.js";
+import {
+  authenticatedFetch,
+  getCurrentUser,
+  signIn,
+  signOut,
+} from "./backendAuth.js";
 
 const loginSection = document.getElementById("login-section");
 const postSection = document.getElementById("post-section");
@@ -39,18 +45,11 @@ function updateBackLink(targetUsername) {
 }
 
 async function refreshAuthUI() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const user = await getCurrentUser();
   
   if (user) {
-    // Check if user has a profile
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .maybeSingle();
+    const profileResponse = await authenticatedFetch("/profiles/me");
+    const profile = profileResponse.ok ? await profileResponse.json() : null;
 
     if (profile) {
       userProfile = profile;
@@ -86,9 +85,6 @@ async function refreshAuthUI() {
 
 async function initializeAuthUI() {
   await refreshAuthUI();
-  supabase.auth.onAuthStateChange((_event, _session) => {
-    refreshAuthUI();
-  });
   window.addEventListener("pageshow", () => {
     refreshAuthUI();
   });
@@ -101,14 +97,17 @@ loginForm.addEventListener("submit", async (e) => {
   loginError.textContent = "";
   const email = loginForm.email.value.trim();
   const password = loginForm.password.value;
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
+  try {
+    await signIn(email, password);
+    await refreshAuthUI();
+  } catch (error) {
     loginError.textContent = error.message;
   }
 });
 
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  signOut();
+  await refreshAuthUI();
 });
 
 // Profile Form Listeners
@@ -117,10 +116,7 @@ profileForm.addEventListener("submit", async (e) => {
   profileStatus.style.color = "";
   profileStatus.textContent = "Saving profile...";
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user;
+  const user = await getCurrentUser();
   if (!user) {
     profileStatus.style.color = "red";
     profileStatus.textContent = "You are not logged in.";
@@ -147,28 +143,22 @@ profileForm.addEventListener("submit", async (e) => {
     avatarPath = path;
   }
 
-  let error = null;
-  if (userProfile) {
-    // Update
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ username, biography, avatar_path: avatarPath })
-      .eq("id", user.id);
-    error = updateError;
-  } else {
-    // Insert
-    const { error: insertError } = await supabase
-      .from("profiles")
-      .insert({ id: user.id, username, biography, avatar_path: avatarPath });
-    error = insertError;
-  }
+  const profileResponse = await authenticatedFetch(
+    userProfile ? "/profiles/me" : "/profiles/me",
+    {
+      method: userProfile ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, biography, avatar_path: avatarPath }),
+    },
+  );
 
-  if (error) {
+  if (!profileResponse.ok) {
+    const errorData = await profileResponse.json().catch(() => ({}));
     profileStatus.style.color = "red";
-    if (error.code === "23505" || (error.message && error.message.includes("unique"))) {
+    if (profileResponse.status === 409) {
       profileStatus.textContent = "Username is already taken. Please choose another one.";
     } else {
-      profileStatus.textContent = "Failed to save profile: " + error.message;
+      profileStatus.textContent = "Failed to save profile: " + (errorData.detail || "Unknown error");
     }
     return;
   }

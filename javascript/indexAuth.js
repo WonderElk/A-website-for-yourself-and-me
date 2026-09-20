@@ -1,4 +1,4 @@
-import { supabase } from "./supabase.js";
+import { getCurrentUser, signIn, signOut } from "./backendAuth.js";
 
 const authHeading = document.getElementById("auth-heading");
 const signedInMessage = document.getElementById("signed-in-message");
@@ -9,10 +9,7 @@ const loginError = document.getElementById("index-login-error");
 const signInSection = document.getElementById("sign-in-section");
 
 async function refreshAuthUI() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const user = session?.user ?? null;
+  const user = await getCurrentUser();
 
   if (user) {
     authHeading.textContent = "Signed in";
@@ -29,9 +26,6 @@ async function refreshAuthUI() {
 
 async function initializeAuthUI() {
   await refreshAuthUI();
-  supabase.auth.onAuthStateChange(() => {
-    refreshAuthUI();
-  });
   window.addEventListener("pageshow", () => {
     refreshAuthUI();
   });
@@ -51,27 +45,18 @@ initializeAuthUI();
 });*/
 
 logoutBtn.addEventListener("click", async () => {
-  await supabase.auth.signOut();
+  signOut();
+  await refreshAuthUI();
 });
 
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const username = loginForm.email.value.trim();
+  const email = loginForm.email.value.trim();
   const password = loginForm.password.value;
-  const response = await fetch("http://localhost:8080/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({ username, password }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    loginError.textContent = errorData.message || "Login failed";
-    return;
+  try {
+    await signIn(email, password);
+    await refreshAuthUI();
+  } catch (error) {
+    loginError.textContent = error.message;
   }
-
-  const data = await response.json();
-  console.log("Logged in to localhost backend:", data);
-})
+});
