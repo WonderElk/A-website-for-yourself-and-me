@@ -98,10 +98,13 @@ async function loadPosts(profiles) {
     }
 
     if (post.image_path) {
+      const imageCard = document.createElement("div");
+      imageCard.className = "image-card";
       const image = document.createElement("img");
       image.src = assetUrl(post.image_path);
       image.alt = post.title || "Post image";
-      wrapper.appendChild(image);
+      imageCard.appendChild(image);
+      wrapper.appendChild(imageCard);
     }
 
     if (post.body) {
