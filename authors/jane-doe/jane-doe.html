@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--Website structure-->
+<head>
+  <meta charset="UTF-8">
+  <base href="/A-website-for-yourself-and-me/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jane Doe's page</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<!---Website Contents-->
+<body>
+  <!--Intro to authors page, (when js class encountererd, calls
+  connectedCallback())-->
+  <author-div 
+    header="Jane Doe's page" 
+    img="tree.jpg" 
+    content="email: Jane.Doe@hotmail.com
+    phone: 078-282 85 67">
+  </author-div>
+  <!--Posts -->
+  <!-- personal note: eventListeners cannot listen to events yet created, I think -->
+  <div id="posts"></div> 
+  <script src="./script.js"></script>  
+  <script type="module">
+    import { loadPosts } from "./javascript/postManager.js"; 
+    loadPosts("jane-doe")
+  </script>
+</body>
+
+</html>
