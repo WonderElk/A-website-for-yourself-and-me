@@ -73,7 +73,7 @@ async function loadPosts(profiles) {
 
   for (const post of posts) {
     const wrapper = document.createElement("article");
-    wrapper.className = "container post";
+    wrapper.className = "recent-post-card";
 
     const title = document.createElement("h2");
     title.className = "underline";
